@@ -1,0 +1,10 @@
+{
+  "name": "Dodd Foundation Treasury",
+  "short_name": "Dodd Treasury",
+  "description": "Dodd Foundation Treasury prototype",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f3f6fa",
+  "theme_color": "#142b46",
+  "icons": []
+}

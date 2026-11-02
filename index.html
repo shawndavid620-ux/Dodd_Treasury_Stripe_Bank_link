@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#142b46">
+<meta name="description" content="Dodd Foundation Treasury — with Stripe Financial Connections">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Dodd Foundation Treasury</title>
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+:root{--navy:#142b46;--navy2:#203d5f;--bg:#f3f6fa;--card:#fff;--text:#182536;--muted:#617187;--line:#dce4ed;--green:#19734a;--amber:#9a6400;--red:#a33232;--blue:#2e63a3}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:var(--navy);color:white;padding:18px max(18px,calc((100% - 1180px)/2));display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border:1px solid #ffffff66;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:18px}.brand h1{font-size:18px;margin:0}.brand p{margin:2px 0 0;color:#cfdae8;font-size:12px}
+.status{font-size:12px;border:1px solid #ffffff5c;border-radius:999px;padding:7px 10px}
+main{max-width:1180px;margin:0 auto;padding:22px 18px 44px}.notice{background:#fff8e8;border:1px solid #eed49a;border-radius:12px;padding:12px 14px;margin-bottom:18px;color:#6b4b08;font-size:13px}
+nav{display:flex;gap:8px;overflow-x:auto;padding-bottom:15px;margin-bottom:4px}nav button{white-space:nowrap;border:1px solid var(--line);background:white;color:var(--navy);padding:10px 14px;border-radius:10px;font-weight:650;cursor:pointer}nav button.active{background:var(--navy);color:white;border-color:var(--navy)}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:17px;min-width:0}.metric-label{font-size:12px;color:var(--muted);font-weight:650}.metric{font-size:clamp(21px,2.4vw,30px);font-weight:750;letter-spacing:-.7px;margin:6px 0}.sub{font-size:12px;color:var(--muted)}.section{margin-top:18px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}.section-head h2{font-size:18px;margin:0}.btn{border:0;border-radius:9px;background:var(--navy);color:white;font-weight:650;padding:10px 13px;cursor:pointer}.btn.secondary{background:white;border:1px solid var(--line);color:var(--navy)}.btn.danger{background:#9e3333}.btn:disabled{opacity:.45;cursor:not-allowed}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:620px}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--muted);font-weight:650;font-size:11px;text-transform:uppercase;letter-spacing:.04em}td.amount{text-align:right;font-variant-numeric:tabular-nums}.pill{display:inline-block;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:700;background:#e9eef5;color:#334b66}.pill.pending{background:#fff1ce;color:#805600}.pill.approved{background:#dff4e8;color:#14613e}.pill.denied{background:#fbe3e3;color:#922f2f}.pill.sample{background:#e5eefc;color:#244f89}.pill.linked{background:#d4edda;color:#155724}.empty{padding:28px;text-align:center;color:var(--muted)}.two{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:flex;flex-direction:column;gap:5px}.field.full{grid-column:1/-1}label{font-size:12px;color:var(--muted);font-weight:650}input,select,textarea{width:100%;border:1px solid #cbd6e2;border-radius:9px;padding:11px;background:white;color:var(--text);font:inherit}textarea{min-height:76px;resize:vertical}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.muted{color:var(--muted)}.amount-positive{color:var(--green)}.amount-negative{color:var(--red)}.panel{display:none}.panel.active{display:block}.foot{color:var(--muted);font-size:12px;text-align:center;margin-top:24px}.mini{font-size:12px}.approval-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.approval-row p{margin:5px 0;color:var(--muted);font-size:13px}.divider{height:1px;background:var(--line);margin:14px 0}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#172a40;color:white;border-radius:10px;padding:11px 16px;box-shadow:0 6px 24px #0002;display:none;max-width:90vw;z-index:10}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.two{grid-template-columns:1fr}}
+@media(max-width:520px){header{padding:14px}.brand h1{font-size:16px}main{padding:16px 12px 32px}.grid{gap:9px}.card{padding:13px}.metric{font-size:22px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.section-head{align-items:flex-start;flex-direction:column}.status{font-size:11px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">DF</div><div><h1>Dodd Foundation Treasury</h1><p>Central account oversight · Stripe Financial Connections</p></div></div>
+  <div class="status" id="connectionStatus">● Checking bank connection…</div>
+</header>
+<main>
+  <div class="notice"><strong>Prototype with bank linking.</strong> Bank accounts are linked via Stripe Financial Connections. Balances are live from the bank (sandbox or live keys). Local ledger entries remain in this browser. Do not enter real credentials in the browser.</div>
+  <nav aria-label="Main navigation">
+    <button class="active" data-tab="overview">Overview</button>
+    <button data-tab="accounts">Accounts</button>
+    <button data-tab="transactions">Transactions</button>
+    <button data-tab="requests">Transfer approvals</button>
+    <button data-tab="audit">Audit trail</button>
+    <button data-tab="settings">Settings & export</button>
+  </nav>
+  <section class="panel active" id="overview">
+    <div class="grid">
+      <div class="card"><div class="metric-label">Recorded ledger balance</div><div class="metric" id="totalBalance">$0.00</div><div class="sub">Sum of local + linked records</div></div>
+      <div class="card"><div class="metric-label">Accounts tracked</div><div class="metric" id="accountCount">0</div><div class="sub">Manual + bank-linked</div></div>
+      <div class="card"><div class="metric-label">Pending transfer requests</div><div class="metric" id="pendingCount">0</div><div class="sub">Awaiting approval</div></div>
+      <div class="card"><div class="metric-label">Unreconciled items</div><div class="metric" id="unreconciledCount">0</div><div class="sub">Manual review required</div></div>
+    </div>
+    <div class="two section">
+      <div class="card"><div class="section-head"><h2>Account balances</h2><button class="btn secondary" onclick="showTab('accounts')">Manage accounts</button></div><div id="overviewAccounts"></div></div>
+      <div class="card"><div class="section-head"><h2>Approval queue</h2><button class="btn secondary" onclick="showTab('requests')">Review requests</button></div><div id="overviewRequests"></div></div>
+    </div>
+    <div class="card section"><div class="section-head"><h2>Recent activity</h2><button class="btn secondary" onclick="showTab('audit')">View audit trail</button></div><div id="recentActivity"></div></div>
+  </section>
+  <section class="panel" id="accounts">
+    <div class="section-head"><h2>Account registry</h2><div class="actions"><button class="btn" id="connectBankBtn" onclick="connectBank()">Connect bank accounts</button><button class="btn secondary" onclick="refreshBalances()">Refresh balances</button><button class="btn secondary" onclick="document.getElementById('accountForm').scrollIntoView({behavior:'smooth'})">+ Add manual account</button></div></div>
+    <div class="card"><div class="table-wrap" id="accountsTable"></div></div>
+    <div class="card section" id="accountForm"><h2>Add manual account record</h2><p class="muted mini">Use for non-linked accounts. Do not enter passwords, PINs, or security codes.</p>
+      <form id="addAccountForm"><div class="form-grid">
+        <div class="field"><label for="institution">Institution</label><input id="institution" required placeholder="Bank or institution name"></div>
+        <div class="field"><label for="accountName">Account label</label><input id="accountName" required placeholder="Foundation operating account"></div>
+        <div class="field"><label for="accountType">Account type</label><select id="accountType"><option>Checking</option><option>Savings</option><option>Investment</option><option>Reserve</option><option>Other</option></select></div>
+        <div class="field"><label for="accountNumber">Masked account / internal ID</label><input id="accountNumber" required placeholder="•••• 1234 or DF-001"></div>
+        <div class="field"><label for="openingBalance">Verified opening balance ($)</label><input id="openingBalance" type="number" min="0" step="0.01" required value="0"></div>
+        <div class="field"><label for="balanceDate">Balance as-of date</label><input id="balanceDate" type="date" required></div>
+      </div><div class="actions"><button class="btn" type="submit">Save account record</button></div></form>
+    </div>
+  </section>
+  <section class="panel" id="transactions">
+    <div class="section-head"><h2>Transaction ledger</h2></div>
+    <div class="card"><div class="table-wrap" id="transactionsTable"></div></div>
+    <div class="card section"><h2>Record a transaction or adjustment</h2><p class="muted mini">Entries are bookkeeping records only. An adjustment does not change money held by a bank.</p>
+      <form id="transactionForm"><div class="form-grid">
+        <div class="field"><label for="txAccount">Account</label><select id="txAccount" required></select></div>
+        <div class="field"><label for="txType">Entry type</label><select id="txType"><option value="deposit">Deposit / credit</option><option value="withdrawal">Withdrawal / debit</option><option value="fee">Bank fee</option><option value="adjustment-credit">Manual adjustment — increase</option><option value="adjustment-debit">Manual adjustment — decrease</option></select></div>
+        <div class="field"><label for="txAmount">Amount ($)</label><input id="txAmount" type="number" min="0.01" step="0.01" required></div>
+        <div class="field"><label for="txDate">Transaction date</label><input id="txDate" type="date" required></div>
+        <div class="field full"><label for="txDescription">Description / reason</label><input id="txDescription" required placeholder="Required reason or transaction description"></div>
+        <div class="field full"><label for="txEvidence">Reference / evidence note (optional)</label><input id="txEvidence" placeholder="Statement reference, receipt ID, or document location"></div>
+      </div><div class="actions"><button class="btn" type="submit">Record entry</button></div></form>
+    </div>
+  </section>
+  <section class="panel" id="requests">
+    <div class="section-head"><h2>Transfer approvals</h2></div>
+    <div class="notice">Every outgoing transfer requires your approval in this prototype. Approval records the decision only; it does not submit a payment to a bank. (Next step: wire approved requests to Stripe Payouts/Transfers.)</div>
+    <div class="card"><div id="requestsList"></div></div>
+    <div class="card section"><h2>Create transfer request</h2>
+      <form id="requestForm"><div class="form-grid">
+        <div class="field"><label for="requester">Requester / workflow</label><input id="requester" required placeholder="Designated user or workflow"></div>
+        <div class="field"><label for="sourceAccount">Source account</label><select id="sourceAccount" required></select></div>
+        <div class="field"><label for="destination">Destination institution / account</label><input id="destination" required placeholder="Verified receiving institution and masked account"></div>
+        <div class="field"><label for="requestedAmount">Requested amount ($)</label><input id="requestedAmount" type="number" min="0.01" step="0.01" required></div>
+        <div class="field full"><label for="requestReason">Purpose</label><textarea id="requestReason" required placeholder="Business purpose and supporting reference"></textarea></div>
+      </div><div class="actions"><button class="btn" type="submit">Submit request for approval</button></div></form>
+    </div>
+  </section>
+  <section class="panel" id="audit">
+    <div class="section-head"><h2>Audit trail</h2><button class="btn secondary" onclick="exportJSON()">Export records</button></div>
+    <div class="notice">This browser-based prototype maintains a local activity history, not a tamper-proof production audit system. Production needs server-side, access-controlled, append-only logging.</div>
+    <div class="card"><div class="table-wrap" id="auditTable"></div></div>
+  </section>
+  <section class="panel" id="settings">
+    <div class="card"><h2>System status</h2><div class="divider"></div>
+      <p><strong>Bank connections:</strong> <span class="pill" id="bankStatusPill">Checking…</span></p>
+      <p><strong>Payment initiation:</strong> <span class="pill">Disabled (prototype)</span></p>
+      <p><strong>Storage:</strong> Browser local storage + Stripe Financial Connections for linked accounts.</p>
+      <p><strong>Approval policy:</strong> Every outgoing transfer requires approval; production identity verification is not implemented.</p>
+      <p><strong>Automatic imports:</strong> Balances via Stripe Financial Connections. Full transaction sync not yet wired.</p>
+      <div class="actions"><button class="btn" onclick="exportJSON()">Export backup (JSON)</button><button class="btn secondary" onclick="exportCSV()">Export ledger (CSV)</button><button class="btn danger" onclick="resetDemo()">Reset local demo data</button></div>
+    </div>
+    <div class="card section"><h2>Production requirements</h2><ul><li>Secure server and database with backups.</li><li>Authentication, multifactor verification, and user roles.</li><li>Stripe Financial Connections (or Plaid) enrollment and consent flows.</li><li>Bank-authorized payment integration (Stripe Payouts / ACH) before any real transfer submission.</li><li>Independent testing of approval enforcement, reconciliation, recovery, and audit integrity.</li></ul></div>
+  </section>
+  <div class="foot">Dodd Foundation Treasury · Prototype with Stripe Financial Connections · No live payment execution yet</div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script>
+const KEY='doddTreasuryPrototypeV1';
+const today=new Date().toISOString().slice(0,10);
+let state;
+let stripe = null;
+let publishableKey = null;
+
+function fresh(){return {accounts:[],transactions:[],requests:[],audit:[]}}
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){return fresh()}}
+function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
+function money(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(n)||0)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]))}
+function id(prefix){return prefix+'-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase()}
+function log(action,details){state.audit.unshift({id:id('AUD'),time:new Date().toISOString(),actor:'Local prototype user',action,details})}
+function balance(a){
+  if(a.linked) return Number(a.balance)||0;
+  return Number(a.openingBalance)+state.transactions.filter(t=>t.accountId===a.id&&t.status!=='void').reduce((s,t)=>s+t.signedAmount,0)
+}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2800)}
+function showTab(tab){document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===tab));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+function table(headers,rows,empty){if(!rows.length)return `<div class="empty">${empty}</div>`;return `<table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`}
+function options(id){return state.accounts.map(a=>`<option value="${esc(a.id)}">${esc(a.institution)} · ${esc(a.label)} (${esc(a.masked)})</option>`).join('')}
+
+async function initStripe(){
+  try{
+    const res = await fetch('/api/config');
+    const data = await res.json();
+    publishableKey = data.publishableKey;
+    if(publishableKey && publishableKey.startsWith('pk_')){
+      stripe = Stripe(publishableKey);
+      document.getElementById('connectionStatus').textContent = '● Stripe ready · No accounts linked yet';
+      document.getElementById('bankStatusPill').textContent = 'Ready';
+      document.getElementById('bankStatusPill').className = 'pill';
+    } else {
+      document.getElementById('connectionStatus').textContent = '● Stripe keys not configured';
+      document.getElementById('bankStatusPill').textContent = 'Not configured';
+      document.getElementById('bankStatusPill').className = 'pill denied';
+    }
+  }catch(e){
+    document.getElementById('connectionStatus').textContent = '● Backend not reachable';
+    document.getElementById('bankStatusPill').textContent = 'Offline';
+    document.getElementById('bankStatusPill').className = 'pill denied';
+  }
+  await loadLinkedAccounts();
+}
+
+async function loadLinkedAccounts(){
+  try{
+    const res = await fetch('/api/accounts');
+    const data = await res.json();
+    if(data.accounts && data.accounts.length){
+      // Merge linked accounts into local state (replace any previous linked ones)
+      state.accounts = state.accounts.filter(a => !a.linked);
+      data.accounts.forEach(acc => {
+        state.accounts.push({
+          id: 'linked-'+acc.id,
+          institution: acc.institution || 'Bank',
+          label: acc.display_name || 'Linked account',
+          type: acc.subcategory || acc.category || 'Checking',
+          masked: '•••• '+ (acc.last4 || '????'),
+          openingBalance: acc.balance || 0,
+          balanceDate: today,
+          reconciled: true,
+          linked: true,
+          stripeAccountId: acc.id,
+          balance: acc.balance
+        });
+      });
+      save();
+      document.getElementById('connectionStatus').textContent = `● ${data.accounts.length} bank account(s) linked`;
+      document.getElementById('bankStatusPill').textContent = 'Linked';
+      document.getElementById('bankStatusPill').className = 'pill linked';
+    }
+  }catch(e){}
+}
+
+async function connectBank(){
+  if(!stripe){ showToast('Stripe not initialized. Check backend and keys.'); return; }
+  try{
+    showToast('Creating bank link session…');
+    const res = await fetch('/api/create-fc-session', {method:'POST'});
+    const data = await res.json();
+    if(data.error){ showToast(data.error); return; }
+    const result = await stripe.collectFinancialConnectionsAccounts({clientSecret: data.clientSecret});
+    if(result.error){ showToast(result.error.message || 'Link cancelled or failed'); return; }
+    // Sync the session
+    const sync = await fetch('/api/sync-accounts', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({sessionId: data.sessionId})});
+    const syncData = await sync.json();
+    if(syncData.accounts){
+      log('Bank accounts linked', `Linked ${syncData.accounts.length} account(s) via Stripe Financial Connections`);
+      await loadLinkedAccounts();
+      showToast(`Linked ${syncData.accounts.length} bank account(s).`);
+    }
+  }catch(e){ showToast(e.message || 'Connection failed'); }
+}
+
+async function refreshBalances(){
+  try{
+    showToast('Refreshing balances…');
+    const res = await fetch('/api/refresh-balances', {method:'POST'});
+    const data = await res.json();
+    if(data.accounts){
+      await loadLinkedAccounts();
+      log('Balances refreshed', `Updated ${data.accounts.length} linked account(s)`);
+      showToast('Balances refreshed from bank.');
+    }
+  }catch(e){ showToast('Refresh failed'); }
+}
+
+function render(){
+ document.getElementById('totalBalance').textContent=money(state.accounts.reduce((s,a)=>s+balance(a),0));
+ document.getElementById('accountCount').textContent=state.accounts.length;
+ document.getElementById('pendingCount').textContent=state.requests.filter(r=>r.status==='Pending').length;
+ document.getElementById('unreconciledCount').textContent=state.accounts.filter(a=>!a.reconciled).length;
+ document.getElementById('overviewAccounts').innerHTML=state.accounts.length?table(['Account','Recorded balance'],state.accounts.slice(0,6).map(a=>`<tr><td><strong>${esc(a.label)}</strong><br><span class="muted">${esc(a.institution)} · ${esc(a.masked)}${a.linked?' · <span class="pill linked">Linked</span>':''}</span></td><td class="amount">${money(balance(a))}</td></tr>`),'No accounts yet. Add a record or connect a bank to begin.'): '<div class="empty">No accounts yet. Add a record or connect a bank to begin.</div>';
+ const pending=state.requests.filter(r=>r.status==='Pending').slice(0,4);
+ document.getElementById('overviewRequests').innerHTML=pending.length?pending.map(r=>`<div class="approval-row"><div><strong>${money(r.requestedAmount)}</strong><p>${esc(r.sourceLabel)} → ${esc(r.destination)}</p></div><span class="pill pending">Pending</span></div><div class="divider"></div>`).join(''):'<div class="empty">No pending requests.</div>';
+ document.getElementById('recentActivity').innerHTML=state.audit.length?table(['Time','Action','Details'],state.audit.slice(0,5).map(a=>`<tr><td>${esc(new Date(a.time).toLocaleString())}</td><td>${esc(a.action)}</td><td>${esc(a.details)}</td></tr>`),'No activity recorded.');
+ document.getElementById('accountsTable').innerHTML=table(['Institution','Account','Type','Masked ID','Recorded balance','As of'],state.accounts.map(a=>`<tr><td>${esc(a.institution)}</td><td>${esc(a.label)}</td><td>${esc(a.type)}</td><td>${esc(a.masked)}</td><td class="amount">${money(balance(a))}</td><td>${esc(a.balanceDate)}<br><span class="pill ${a.linked?'linked':'sample'}">${a.linked?'Bank linked':'Manual record'}</span></td></tr>`),'No account records yet.');
+ ['txAccount','sourceAccount'].forEach(id=>{const el=document.getElementById(id),old=el.value;el.innerHTML=options(id);if(state.accounts.some(a=>a.id===old))el.value=old});
+ document.getElementById('transactionsTable').innerHTML=table(['Date','Account','Type','Description','Amount','Status'],state.transactions.map(t=>{let a=state.accounts.find(a=>a.id===t.accountId);return `<tr><td>${esc(t.date)}</td><td>${esc(a?a.label:'Unknown')}</td><td>${esc(t.typeLabel)}</td><td>${esc(t.description)}${t.evidence?`<br><span class="muted">${esc(t.evidence)}</span>`:''}</td><td class="amount ${t.signedAmount>=0?'amount-positive':'amount-negative'}">${t.signedAmount>=0?'+':'−'}${money(Math.abs(t.signedAmount))}</td><td><span class="pill">${esc(t.status)}</span></td></tr>`}).reverse(),'No transactions recorded.');
+ document.getElementById('requestsList').innerHTML=state.requests.length?state.requests.slice().reverse().map(r=>`<div class="approval-row"><div style="flex:1"><strong>${esc(r.id)} · ${money(r.requestedAmount)}</strong><p>${esc(r.requester)} · ${esc(r.sourceLabel)} → ${esc(r.destination)}</p><p>${esc(r.reason)}</p>${r.approvedAmount!=null?`<p>Authorized amount: <strong>${money(r.approvedAmount)}</strong></p>`:''}<span class="pill ${r.status.toLowerCase()}">${esc(r.status)}</span>${r.status==='Approved'?'<p class="muted">Approved locally only; no bank payment was sent.</p>':''}</div>${r.status==='Pending'?`<div style="min-width:170px"><label for="amt-${r.id}">Amount you authorize ($)</label><input id="amt-${r.id}" type="number" min="0.01" max="${r.requestedAmount}" step="0.01" value="${r.requestedAmount}" style="margin:5px 0 8px"><button class="btn" onclick="approve('${r.id}')">Approve amount</button><button class="btn secondary" style="margin-top:6px" onclick="deny('${r.id}')">Deny request</button></div>`:''}</div><div class="divider"></div>`).join(''):'<div class="empty">No transfer requests.</div>';
+ document.getElementById('auditTable').innerHTML=table(['Timestamp','Actor','Action','Details','Reference'],state.audit.map(a=>`<tr><td>${esc(new Date(a.time).toLocaleString())}</td><td>${esc(a.actor)}</td><td>${esc(a.action)}</td><td>${esc(a.details)}</td><td>${esc(a.id)}</td></tr>`),'No audit events.');
+}
+document.getElementById('addAccountForm').addEventListener('submit',e=>{e.preventDefault();const a={id:id('ACC'),institution:institution.value.trim(),label:accountName.value.trim(),type:accountType.value,masked:accountNumber.value.trim(),openingBalance:Number(openingBalance.value),balanceDate:balanceDate.value,reconciled:false,linked:false};state.accounts.push(a);log('Account record added',`${a.institution} · ${a.label}; opening balance ${money(a.openingBalance)} (manually entered)`);save();e.target.reset();openingBalance.value='0';balanceDate.value=today;showToast('Account record saved locally.')});
+document.getElementById('transactionForm').addEventListener('submit',e=>{e.preventDefault();if(!state.accounts.length){showToast('Add an account first.');return}const type=txType.value,amt=Number(txAmount.value);if(!amt||amt<=0)return;const signed=['deposit','adjustment-credit'].includes(type)?amt:-amt;const typeLabels={'deposit':'Deposit / credit','withdrawal':'Withdrawal / debit','fee':'Bank fee','adjustment-credit':'Manual adjustment — increase','adjustment-debit':'Manual adjustment — decrease'};const tx={id:id('TX'),accountId:txAccount.value,type,typeLabel:typeLabels[type],date:txDate.value,description:txDescription.value.trim(),evidence:txEvidence.value.trim(),signedAmount:signed,status:type.startsWith('adjustment')?'Pending approval':'Manually recorded'};state.transactions.push(tx);log('Transaction recorded',`${tx.typeLabel} ${money(amt)} for ${state.accounts.find(a=>a.id===tx.accountId)?.label}; ${tx.description}`);save();e.target.reset();txDate.value=today;showToast(type.startsWith('adjustment')?'Adjustment recorded as pending review.':'Transaction recorded locally.')});
+document.getElementById('requestForm').addEventListener('submit',e=>{e.preventDefault();if(!state.accounts.length){showToast('Add an account first.');return}const a=state.accounts.find(a=>a.id===sourceAccount.value);const amt=Number(requestedAmount.value);if(!a||!amt||amt<=0)return;const r={id:id('REQ'),requester:requester.value.trim(),sourceAccount:a.id,sourceLabel:a.institution+' · '+a.label+' ('+a.masked+')',destination:destination.value.trim(),requestedAmount:amt,approvedAmount:null,reason:requestReason.value.trim(),status:'Pending',createdAt:new Date().toISOString()};state.requests.push(r);log('Transfer request submitted',`${r.id}: ${money(amt)} from ${r.sourceLabel} to ${r.destination}; awaiting required approval`);save();e.target.reset();showToast('Request added to approval queue.')});
+function approve(rid){const r=state.requests.find(r=>r.id===rid);if(!r||r.status!=='Pending')return;const el=document.getElementById('amt-'+rid);const amt=Number(el.value);if(!amt||amt<=0||amt>r.requestedAmount){showToast('Enter an amount greater than zero and no more than requested.');return}if(!confirm(`Approve ${money(amt)} for ${r.destination}? This records approval and can initiate a Stripe test payout.`))return;r.approvedAmount=amt;r.status='Approved — executing…';log('Transfer approval recorded',`${r.id}: approved ${money(amt)} of ${money(r.requestedAmount)} for ${r.destination}`);save();executePayout(r, amt);}
+async function executePayout(r, amt){
+  try{
+    showToast('Creating Stripe payout…');
+    const res = await fetch('/api/execute-payout', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        amount: amt,
+        description: r.reason || 'Foundation transfer',
+        destinationLast4: (r.destination || '').slice(-4),
+        requestId: r.id
+      })
+    });
+    const data = await res.json();
+    if(data.success){
+      r.status = 'Approved — payout ' + data.payoutId;
+      r.payoutId = data.payoutId;
+      log('Stripe payout created', `${r.id}: ${data.payoutId} status ${data.status}`);
+      save();
+      showToast(`Payout created: ${data.payoutId}`);
+    } else {
+      r.status = 'Approved — payout failed';
+      log('Payout failed', data.error || 'unknown error');
+      save();
+      showToast(data.error || 'Payout failed');
+    }
+  }catch(e){
+    r.status = 'Approved — payout error';
+    save();
+    showToast(e.message || 'Network error');
+  }
+}
+function deny(rid){const r=state.requests.find(r=>r.id===rid);if(!r||r.status!=='Pending')return;if(!confirm('Deny this transfer request?'))return;r.status='Denied';log('Transfer request denied',`${r.id}: ${money(r.requestedAmount)} to ${r.destination}`);save();showToast('Request denied.')}
+function exportJSON(){const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),mode:'prototype-with-stripe-fc',state},null,2)],{type:'application/json'});download(blob,'dodd-treasury-backup.json')}
+function exportCSV(){const rows=[['Date','Account','Type','Description','Amount','Status'],...state.transactions.map(t=>[t.date,state.accounts.find(a=>a.id===t.accountId)?.label||'',t.typeLabel,t.description,t.signedAmount,t.status])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');download(new Blob([csv],{type:'text/csv;charset=utf-8'}),'dodd-treasury-ledger.csv')}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href)}
+function resetDemo(){if(!confirm('Permanently clear local prototype records from this browser? Export a backup first if needed.'))return;state=fresh();log('Local prototype reset','Local records cleared; no bank data affected');save();showToast('Local demo records cleared.')}
+state=load();document.getElementById('balanceDate').value=today;document.getElementById('txDate').value=today;render();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+initStripe();
+</script>
+</body></html>
